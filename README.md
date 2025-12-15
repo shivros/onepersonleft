@@ -71,6 +71,7 @@ pnpm build
 ### Next Steps (Phase 2+)
 
 Phase 1 deliberately avoids implementing any simulation logic. Future phases will add:
+
 - Actual automation mechanics
 - Incident generation and handling
 - Financial calculations
@@ -81,6 +82,7 @@ Phase 1 deliberately avoids implementing any simulation logic. Future phases wil
 ### Architecture Notes
 
 The code follows strict architectural boundaries:
+
 - UI components use Zustand hooks to access state
 - No business logic in components (currently all placeholder)
 - Clean separation between `/sim`, `/store`, and `/lib/components`
