@@ -1,47 +1,63 @@
-# One Person Left - Phase 1
+# One Person Left - Phase 2
 
 A simulation exploring AI-driven workforce automation in a big tech company.
 
-## Phase 1 Completion Summary
+## Phase 2 Completion Summary
 
-This repository contains the completed Phase 1 implementation, which establishes the foundational infrastructure for the simulation.
+Phase 2 implements a deterministic, pure TypeScript simulation core, replacing Phase 1's mock data with real game logic.
 
 ### What Was Built
 
-1. **Project Infrastructure**
-   - Vite + React + TypeScript setup
-   - Tailwind CSS for styling
-   - ESLint and Prettier for code quality
-   - Zustand for state management
+1. **Simulation Core (`/src/sim`)**
+   - **types.ts** - Core data structures (roles, company state, events, hidden metrics)
+   - **rng.ts** - Seeded PRNG (mulberry32) for deterministic randomness
+   - **actions.ts** - Player actions (hire, fire, set automation)
+   - **reduce.ts** - Pure reducer for applying actions to state
+   - **tick.ts** - Time advancement logic with financial calculations
+   - **index.ts** - Public API and initial state creator
 
-2. **Directory Structure**
-   - `/src/sim` - Reserved for future simulation logic
-   - `/src/store` - Zustand state management
-   - `/src/lib/components` - UI components
+2. **Game Mechanics**
+   - **5 Employee Roles**: Support, Sales, Engineering, Legal, Compliance
+   - **Initial Headcount**: 50,000 total (15k support, 10k sales, 15k engineering, 5k legal, 5k compliance)
+   - **Automation**: 0-100% per role, affects costs and revenue
+   - **Financial Model**:
+     - Role-specific costs (engineers: $200k/yr, sales: $150k/yr, etc.)
+     - Automation reduces burn rate up to 30%
+     - Sales generates revenue ($500k/employee/yr base)
+     - Automation boosts sales revenue up to 50%
+     - Weekly cash updates based on revenue - burn rate
+   - **Stock Price**: Dynamic calculation based on cash/employee and revenue/employee
+   - **Hidden Metrics**: Compliance risk, audit risk, agent risk (not shown to player)
+   - **Random Events**: Low-probability incidents based on risk levels
 
-3. **Components**
-   - **Dashboard** - Main container with 2-column responsive layout
-   - **CompanySnapshot** - Displays company metrics (left column)
-   - **ActionsPanel** - Shows current week and "Advance 1 Week" button (right top)
-   - **EventLog** - Displays simulation events (right bottom)
+3. **State Management Integration**
+   - Zustand store refactored to wrap simulation core
+   - UI components unchanged (maintain Phase 1 interface)
+   - Added role automation controls to ActionsPanel
+   - Reset button for restarting simulation
 
-4. **State Management**
-   - Zustand store with dummy company metrics:
-     - Ticker: DNSZ
-     - Headcount: 50,000 employees
-     - Cash: $40B
-     - Burn Rate: $70B/year
-     - Revenue: $150B/year
-     - Stock Price: $666
-     - Market Cap: $1.5T
+4. **Testing Infrastructure**
+   - Vitest configured for pure TypeScript testing
+   - 17 tests across 3 suites (rng, reduce, tick)
+   - Test coverage for:
+     - Determinism (same seed = same results)
+     - Non-negative invariants (no negative cash/headcount)
+     - Pure functions (no mutations)
+     - Range constraints (automation 0-1, risks 0-1)
 
 ### Success Criteria Met
 
-✅ Working dev server running on auto-selected port
-✅ Dashboard renders with all three UI panels
-✅ "Advance 1 Week" button increments tick counter
-✅ Event log updates when button is clicked
-✅ Responsive 2-column layout
+✅ Pure `/src/sim` module with no browser dependencies
+✅ Seeded RNG for 100% determinism
+✅ Role-specific costs and automation mechanics
+✅ Financial calculations (burn rate, revenue, cash flow)
+✅ Stock price simulation with random walk
+✅ Hidden risk metrics (compliance, audit, agent)
+✅ Event log with structured events (type + message)
+✅ Zustand store integrated with simulation
+✅ Automation controls in UI
+✅ Test suite with determinism tests
+✅ All tests passing
 ✅ No TypeScript or linting errors
 ✅ Production build succeeds
 
@@ -54,6 +70,15 @@ pnpm install
 # Start development server (auto-selects available port)
 pnpm dev
 
+# Run tests
+pnpm test
+
+# Run tests in watch mode
+pnpm test:watch
+
+# Run tests with UI
+pnpm test:ui
+
 # Run linter
 pnpm lint
 
@@ -61,29 +86,93 @@ pnpm lint
 pnpm build
 ```
 
-### Validation
+### Architecture
 
-- **Dev Server**: Running on http://localhost:5174/
-- **Lint**: No errors or warnings
-- **Build**: Successful TypeScript compilation and Vite build
-- **UI**: All components render correctly with Tailwind styling
+**Module Dependency Flow:**
 
-### Next Steps (Phase 2+)
+```
+types → rng → actions → reduce → tick → index (sim public API)
+                                          ↓
+                                    useGameStore (Zustand)
+                                          ↓
+                                    UI Components
+```
 
-Phase 1 deliberately avoids implementing any simulation logic. Future phases will add:
+**Key Design Decisions:**
 
-- Actual automation mechanics
-- Incident generation and handling
-- Financial calculations
-- Stock price simulation
-- Win/loss conditions
-- Data persistence
+- **Determinism**: Same seed + same actions = identical outcomes
+- **Pure Functions**: All sim functions are pure (no side effects)
+- **No Browser APIs**: Simulation never calls Math.random(), Date.now(), or any browser APIs
+- **Immutable Updates**: All state changes return new objects
+- **Thin Store Layer**: Zustand store is just a wrapper calling sim functions
 
-### Architecture Notes
+### File Structure
 
-The code follows strict architectural boundaries:
+```
+src/
+├── sim/                      # Pure simulation logic (no React/browser deps)
+│   ├── types.ts              # Core types and constants
+│   ├── rng.ts                # Seeded random number generator
+│   ├── actions.ts            # Player action types
+│   ├── reduce.ts             # Pure state reducer
+│   ├── tick.ts               # Time advancement logic
+│   ├── index.ts              # Public API
+│   ├── rng.test.ts           # RNG determinism tests
+│   ├── reduce.test.ts        # Reducer purity tests
+│   └── tick.test.ts          # Simulation invariant tests
+├── store/
+│   └── useGameStore.ts       # Zustand store (wraps sim)
+└── lib/components/
+    ├── Dashboard.tsx         # Main layout
+    ├── CompanySnapshot.tsx   # Metrics display
+    ├── ActionsPanel.tsx      # Time + automation controls
+    └── EventLog.tsx          # Event history
+```
 
-- UI components use Zustand hooks to access state
-- No business logic in components (currently all placeholder)
-- Clean separation between `/sim`, `/store`, and `/lib/components`
-- All styling uses Tailwind utility classes
+### Initial Conditions
+
+- **Ticker**: DNSZ
+- **Cash**: $40B
+- **Roles**: 50,000 total employees across 5 departments
+- **Automation**: 0% (all roles start manual)
+- **Seed**: "default-seed" (hardcoded for Phase 2)
+
+### Testing
+
+The test suite validates core properties:
+
+1. **Determinism**: Same seed produces identical sequences
+2. **Non-negativity**: Cash, headcount, prices never go negative
+3. **Range Constraints**: Automation [0,1], risks [0,1]
+4. **Immutability**: Reducers don't mutate input state
+5. **Consistency**: Financial calculations follow expected formulas
+
+Run `pnpm test` to verify all invariants hold.
+
+### Next Steps (Phase 3+)
+
+Phase 2 implements core mechanics. Future phases could add:
+
+- **UI Enhancements**: Charts, graphs, risk meters
+- **Advanced Features**: Hiring/firing UI, incident handling, audits
+- **AI Agents**: Autonomous agents with personalities and goals
+- **Win/Loss Conditions**: Bankruptcy detection, game over states
+- **Persistence**: Save/load game state
+- **Seed Management**: Custom seeds, sharing scenarios
+- **Event Filtering**: Filter by type/severity
+
+### Verification
+
+- **Tests**: 17/17 passing (`pnpm test`)
+- **Lint**: No errors or warnings (`pnpm lint`)
+- **Build**: Clean TypeScript compilation (`pnpm build`)
+- **Determinism**: Same actions produce identical results
+- **Simulation**: Company metrics update realistically over time
+
+### Known Limitations
+
+- No persistence (state resets on page refresh)
+- Hardcoded seed (cannot customize)
+- Simple stock price model (not realistic)
+- No hire/fire UI controls yet (only automation sliders)
+- Events can accumulate unbounded (no limit on event log size)
