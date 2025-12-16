@@ -7,9 +7,18 @@ export function ActionsPanel() {
   const tick = useGameStore((state) => state.tick)
   const roles = useGameStore((state) => state.roles)
   const agents = useGameStore((state) => state.agents)
+  const ending = useGameStore((state) => state.ending)
   const advanceTick = useGameStore((state) => state.advanceTick)
   const automateRole = useGameStore((state) => state.automateRole)
   const reset = useGameStore((state) => state.reset)
+
+  const gameEnded = ending !== null
+
+  const advanceMultipleWeeks = (weeks: number) => {
+    for (let i = 0; i < weeks; i++) {
+      advanceTick()
+    }
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -21,13 +30,34 @@ export function ActionsPanel() {
         </div>
         <button
           onClick={advanceTick}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+          disabled={gameEnded}
+          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
         >
           Advance 1 Week
         </button>
 
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => advanceMultipleWeeks(4)}
+            disabled={gameEnded}
+            className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+          >
+            Advance 4 Weeks
+          </button>
+          <button
+            onClick={() => advanceMultipleWeeks(12)}
+            disabled={gameEnded}
+            className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+          >
+            Advance 12 Weeks
+          </button>
+        </div>
+
         <div className="border-t pt-4">
-          <h3 className="text-lg font-semibold mb-3 text-gray-700">Role Automation</h3>
+          <h3 className="text-lg font-semibold mb-2 text-gray-700">Role Automation</h3>
+          <p className="text-xs text-gray-500 mb-3">
+            Automation reduces headcount but increases risk
+          </p>
           <div className="space-y-3">
             {ROLES.map((role) => {
               const roleData = roles[role]

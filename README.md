@@ -58,38 +58,43 @@ Phase 5 adds game ending conditions and shareable URLs, transforming the game fr
 ### Success Criteria Met
 
 ✅ **Game Ending System**:
-  - WIN condition: headcount === 1 && cash > 0 && !delisted && !catastrophicFailure
-  - LOSE condition (bankruptcy): 4+ consecutive weeks at cash ≤ 0
-  - LOSE condition (delisted): High compliance/audit risk triggers SEC delisting
-  - LOSE condition (catastrophic): Very high agent risk triggers catastrophic AI failure
-  - Ending state persists once set (game stops advancing)
+
+- WIN condition: headcount === 1 && cash > 0 && !delisted && !catastrophicFailure
+- LOSE condition (bankruptcy): 4+ consecutive weeks at cash ≤ 0
+- LOSE condition (delisted): High compliance/audit risk triggers SEC delisting
+- LOSE condition (catastrophic): Very high agent risk triggers catastrophic AI failure
+- Ending state persists once set (game stops advancing)
 
 ✅ **End Screen UI**:
-  - EndScreen component displays with victory/defeat title
-  - Contextual blurbs for each ending type (satirical tone)
-  - Stats panel shows weeks survived, final metrics
-  - Restart button generates new game with new seed
-  - Share button copies URL to clipboard with success alert
+
+- EndScreen component displays with victory/defeat title
+- Contextual blurbs for each ending type (satirical tone)
+- Stats panel shows weeks survived, final metrics
+- Restart button generates new game with new seed
+- Share button copies URL to clipboard with success alert
 
 ✅ **State Sharing System**:
-  - Full state encoded to base64url (URL-safe, no padding)
-  - Zod schema validates decoded states
-  - Malformed/invalid URLs handled gracefully (no crash)
-  - URL hash auto-loads on app mount
-  - Backward compatibility with pre-Phase-5 states
+
+- Full state encoded to base64url (URL-safe, no padding)
+- Zod schema validates decoded states
+- Malformed/invalid URLs handled gracefully (no crash)
+- URL hash auto-loads on app mount
+- Backward compatibility with pre-Phase-5 states
 
 ✅ **Testing & Quality**:
-  - 56 tests passing (23 new Phase 5 tests)
-  - No TypeScript errors
-  - No linting warnings
-  - Production build succeeds
-  - 100% determinism maintained
+
+- 56 tests passing (23 new Phase 5 tests)
+- No TypeScript errors
+- No linting warnings
+- Production build succeeds
+- 100% determinism maintained
 
 ✅ **Architecture**:
-  - Pure simulation core preserved
-  - New `src/share/` module for encoding/validation
-  - Ending logic integrated into tick pipeline
-  - Store methods for restart/share/load
+
+- Pure simulation core preserved
+- New `src/share/` module for encoding/validation
+- Ending logic integrated into tick pipeline
+- Store methods for restart/share/load
 
 ### Running the Application
 
@@ -190,22 +195,24 @@ Run `pnpm test` to verify all invariants hold.
 
 ### Agent Types Reference
 
-| Agent Type | Deploy Cost | Annual Cost | Reliability | Can Automate |
-|------------|-------------|-------------|-------------|--------------|
-| Generalist | $10M | $5M/yr | 70% | Support, Sales |
-| Support | $25M | $10M/yr | 80% | Support |
-| Engineer | $100M | $30M/yr | 60% | Engineering |
-| Compliance | $50M | $20M/yr | 75% | Legal, Compliance |
+| Agent Type | Deploy Cost | Annual Cost | Reliability | Can Automate      |
+| ---------- | ----------- | ----------- | ----------- | ----------------- |
+| Generalist | $10M        | $5M/yr      | 70%         | Support, Sales    |
+| Support    | $25M        | $10M/yr     | 80%         | Support           |
+| Engineer   | $100M       | $30M/yr     | 60%         | Engineering       |
+| Compliance | $50M        | $20M/yr     | 75%         | Legal, Compliance |
 
 ### Gameplay Strategy
 
 **Tradeoffs:**
+
 - Agents reduce headcount → lower salary costs → better margins
 - BUT agents cost money to deploy and operate
 - AND low-reliability agents increase incident risk
 - AND high automation increases fragility
 
 **Optimal Play:**
+
 1. Deploy generalist agents first (cheap, versatile)
 2. Automate high-headcount roles (support, engineering)
 3. Monitor cash flow (agent costs add to burn rate)
@@ -215,6 +222,7 @@ Run `pnpm test` to verify all invariants hold.
 ### Gameplay
 
 **How to Win:**
+
 - Fire employees aggressively while maintaining cash flow
 - Deploy AI agents to automate roles and reduce headcount
 - Reach exactly 1 employee without going bankrupt or getting delisted
@@ -222,11 +230,13 @@ Run `pnpm test` to verify all invariants hold.
 - Balance agent reliability vs. cost to avoid catastrophic failures
 
 **How to Lose:**
+
 - Go 4+ consecutive weeks with cash ≤ $0 (bankruptcy)
 - Trigger SEC delisting via high compliance/audit risk + bad RNG
 - Cause catastrophic AI failure via very high agent risk (>0.8) + bad RNG
 
 **Strategy Tips:**
+
 1. Fire aggressively early when cash is high
 2. Deploy generalist agents first (cheap, versatile)
 3. Keep legal/compliance headcount above 0 to reduce delisting risk

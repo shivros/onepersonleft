@@ -1,20 +1,8 @@
 import { useGameStore } from '../../store/useGameStore'
+import { formatCurrency } from '../utils/formatNumber'
 
 export function CompanySnapshot() {
   const company = useGameStore((state) => state.company)
-
-  const formatMoney = (amount: number): string => {
-    if (amount >= 1_000_000_000_000) {
-      return `$${(amount / 1_000_000_000_000).toFixed(2)}T`
-    }
-    if (amount >= 1_000_000_000) {
-      return `$${(amount / 1_000_000_000).toFixed(2)}B`
-    }
-    if (amount >= 1_000_000) {
-      return `$${(amount / 1_000_000).toFixed(2)}M`
-    }
-    return `$${amount.toLocaleString()}`
-  }
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -30,23 +18,33 @@ export function CompanySnapshot() {
         </div>
         <div className="flex justify-between items-center border-b pb-2">
           <span className="text-gray-600">Cash</span>
-          <span className="font-semibold text-green-600">{formatMoney(company.cash)}</span>
+          <span className="font-semibold text-green-600">{formatCurrency(company.cash)}</span>
         </div>
-        <div className="flex justify-between items-center border-b pb-2">
-          <span className="text-gray-600">Burn Rate</span>
-          <span className="font-semibold text-red-600">{formatMoney(company.burnRate)}/year</span>
+        <div className="border-b pb-2">
+          <div className="flex justify-between items-center">
+            <span className="text-gray-600">Burn Rate</span>
+            <span className="font-semibold text-red-600">
+              {formatCurrency(company.burnRate)}/year
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">Weekly operating costs</p>
         </div>
         <div className="flex justify-between items-center border-b pb-2">
           <span className="text-gray-600">Revenue</span>
-          <span className="font-semibold text-blue-600">{formatMoney(company.revenue)}/year</span>
+          <span className="font-semibold text-blue-600">
+            {formatCurrency(company.revenue)}/year
+          </span>
         </div>
-        <div className="flex justify-between items-center border-b pb-2">
-          <span className="text-gray-600">Stock Price</span>
-          <span className="font-semibold">${company.stockPrice.toFixed(2)}</span>
+        <div className="border-b pb-2">
+          <div className="flex justify-between items-center">
+            <span className="text-gray-600">Stock Price</span>
+            <span className="font-semibold">{formatCurrency(company.stockPrice)}</span>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">Driven by margins and risk</p>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-gray-600">Market Cap</span>
-          <span className="font-semibold">{formatMoney(company.marketCap)}</span>
+          <span className="font-semibold">{formatCurrency(company.marketCap)}</span>
         </div>
       </div>
     </div>

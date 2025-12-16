@@ -61,7 +61,11 @@ export function tick(state: SimulationState): SimulationState {
   const { complianceRisk, auditRisk, agentRisk } = calculateRisks(state, rng)
 
   // Generate random events based on risks
-  const { events: riskEvents, delisted, catastrophicFailure } = generateRiskEvents(
+  const {
+    events: riskEvents,
+    delisted,
+    catastrophicFailure,
+  } = generateRiskEvents(
     nextTick,
     rng,
     {
