@@ -55,7 +55,9 @@ export function ActionsPanel() {
 
         <div className="border-t pt-4">
           <h3 className="text-lg font-semibold mb-2 text-gray-700">Role Automation</h3>
-          <p className="text-xs text-gray-500 mb-3">Automation reduces headcount but increases risk</p>
+          <p className="text-xs text-gray-500 mb-3">
+            Automation reduces headcount but increases risk
+          </p>
           <div className="space-y-3">
             {ROLES.map((role) => {
               const roleData = roles[role]

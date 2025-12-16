@@ -23,13 +23,17 @@ export function CompanySnapshot() {
         <div className="border-b pb-2">
           <div className="flex justify-between items-center">
             <span className="text-gray-600">Burn Rate</span>
-            <span className="font-semibold text-red-600">{formatCurrency(company.burnRate)}/year</span>
+            <span className="font-semibold text-red-600">
+              {formatCurrency(company.burnRate)}/year
+            </span>
           </div>
           <p className="text-xs text-gray-500 mt-1">Weekly operating costs</p>
         </div>
         <div className="flex justify-between items-center border-b pb-2">
           <span className="text-gray-600">Revenue</span>
-          <span className="font-semibold text-blue-600">{formatCurrency(company.revenue)}/year</span>
+          <span className="font-semibold text-blue-600">
+            {formatCurrency(company.revenue)}/year
+          </span>
         </div>
         <div className="border-b pb-2">
           <div className="flex justify-between items-center">

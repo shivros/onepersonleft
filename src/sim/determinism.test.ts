@@ -97,16 +97,16 @@ describe('Simulation Determinism', () => {
 
     // Event messages should differ because action order differs
     // Get the action events (skip the initial "Simulation initialized" event)
-    const actionEventsA = stateA.events.filter(e => e.tick > 0)
-    const actionEventsB = stateB.events.filter(e => e.tick > 0)
+    const actionEventsA = stateA.events.filter((e) => e.tick > 0)
+    const actionEventsB = stateB.events.filter((e) => e.tick > 0)
 
     // Both should have recorded the actions, but in different order
     // Find the 'fire' event in each
-    const fireEventA = actionEventsA.find(e => e.message.includes('Fired'))
-    const fireEventB = actionEventsB.find(e => e.message.includes('Fired'))
+    const fireEventA = actionEventsA.find((e) => e.message.includes('Fired'))
+    const fireEventB = actionEventsB.find((e) => e.message.includes('Fired'))
 
-    const automationEventA = actionEventsA.find(e => e.message.includes('automation'))
-    const automationEventB = actionEventsB.find(e => e.message.includes('automation'))
+    const automationEventA = actionEventsA.find((e) => e.message.includes('automation'))
+    const automationEventB = actionEventsB.find((e) => e.message.includes('automation'))
 
     // Both should have these events
     expect(fireEventA).toBeDefined()
