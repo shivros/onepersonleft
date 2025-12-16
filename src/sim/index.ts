@@ -33,6 +33,7 @@ export function createInitialState(seed: string = DEFAULT_SEED): SimulationState
         legal: { headcount: INITIAL_HEADCOUNT.legal, automationLevel: 0 },
         compliance: { headcount: INITIAL_HEADCOUNT.compliance, automationLevel: 0 },
       },
+      agents: [], // No agents deployed initially
     },
     hidden: {
       complianceRisk: 0,

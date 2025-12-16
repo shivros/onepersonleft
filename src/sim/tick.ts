@@ -4,7 +4,7 @@
  */
 
 import type { SimulationState, Role, GameEvent } from './types'
-import { ROLE_CONFIGS } from './types'
+import { ROLE_CONFIGS, AGENT_CONFIGS } from './types'
 import { SeededRNG } from './rng'
 
 /**
@@ -121,6 +121,12 @@ function calculateFinancials(state: SimulationState): {
     }
   }
 
+  // Add agent operational costs to burn rate
+  for (const agent of state.company.agents) {
+    const agentConfig = AGENT_CONFIGS[agent.type]
+    burnRate += agentConfig.annualCost
+  }
+
   return { burnRate, revenue }
 }
 
@@ -156,12 +162,26 @@ function calculateRisks(
     Math.min(1, baseAuditRisk + automationAuditRisk + rng.nextFloat(-0.1, 0.1))
   )
 
-  // Agent risk increases with overall automation level
+  // Agent risk increases with overall automation level AND decreases with agent reliability
   const avgAutomation =
     Object.values(state.company.roles).reduce((sum, role) => sum + role.automationLevel, 0) / 5
+
+  // Calculate average agent reliability (lower reliability = higher risk)
+  let avgReliabilityPenalty = 0
+  if (state.company.agents.length > 0) {
+    const totalReliability = state.company.agents.reduce((sum, agent) => {
+      const config = AGENT_CONFIGS[agent.type]
+      return sum + (1 - config.reliability) // Convert reliability to risk factor
+    }, 0)
+    avgReliabilityPenalty = totalReliability / state.company.agents.length
+  }
+
   const agentRisk = Math.max(
     0,
-    Math.min(1, avgAutomation * avgAutomation + rng.nextFloat(-0.05, 0.05))
+    Math.min(
+      1,
+      avgAutomation * avgAutomation + avgReliabilityPenalty * 0.5 + rng.nextFloat(-0.05, 0.05)
+    )
   )
 
   return { complianceRisk, auditRisk, agentRisk }

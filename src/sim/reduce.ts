@@ -3,7 +3,8 @@
  * CRITICAL: Must be a pure function - no side effects, no randomness
  */
 
-import type { SimulationState, Role } from './types'
+import type { SimulationState, Role, Agent } from './types'
+import { AGENT_CONFIGS } from './types'
 import type { GameAction } from './actions'
 
 /**
@@ -87,6 +88,112 @@ export function reduce(state: SimulationState, action: GameAction): SimulationSt
             tick: state.tick,
             type: 'warning',
             message: `Fired ${actualFired} ${role} (now ${newHeadcount})`,
+          },
+        ],
+      }
+    }
+
+    case 'DEPLOY_AGENT': {
+      const { agentType } = action
+      const config = AGENT_CONFIGS[agentType]
+
+      // Check if player can afford the deployment cost
+      // Following plan review decision point 3: allow debt with penalties
+      const newCash = state.company.cash - config.deploymentCost
+
+      // Generate unique agent ID (using tick + agent count for determinism)
+      const agentId = `agent-${state.tick}-${state.company.agents.length}`
+
+      const newAgent: Agent = {
+        id: agentId,
+        type: agentType,
+        deployedAt: state.tick,
+      }
+
+      return {
+        ...state,
+        company: {
+          ...state.company,
+          cash: newCash,
+          agents: [...state.company.agents, newAgent],
+        },
+        events: [
+          ...state.events,
+          {
+            tick: state.tick,
+            type: newCash < 0 ? 'warning' : 'success',
+            message: `Deployed ${agentType} agent for $${(config.deploymentCost / 1_000_000).toFixed(0)}M${newCash < 0 ? ' (debt incurred)' : ''}`,
+          },
+        ],
+      }
+    }
+
+    case 'AUTOMATE_ROLE': {
+      const { role, agentId } = action
+
+      // Verify the agent exists and can handle this role
+      const agent = state.company.agents.find((a) => a.id === agentId)
+      if (!agent) {
+        return {
+          ...state,
+          events: [
+            ...state.events,
+            {
+              tick: state.tick,
+              type: 'danger',
+              message: `Failed to automate ${role}: agent not found`,
+            },
+          ],
+        }
+      }
+
+      const agentConfig = AGENT_CONFIGS[agent.type]
+      const canAutomate = agentConfig.specialization.includes(role)
+
+      if (!canAutomate) {
+        return {
+          ...state,
+          events: [
+            ...state.events,
+            {
+              tick: state.tick,
+              type: 'danger',
+              message: `${agent.type} agent cannot automate ${role} role`,
+            },
+          ],
+        }
+      }
+
+      // Calculate headcount reduction based on automation increase
+      // Following plan review decision point 2: store automation level separately
+      const currentAutomation = state.company.roles[role].automationLevel
+      const newAutomation = Math.min(1.0, currentAutomation + 0.1) // +10% automation
+      const currentHeadcount = state.company.roles[role].headcount
+
+      // Reduce headcount proportionally to automation increase
+      const automationIncrease = newAutomation - currentAutomation
+      const headcountReduction = Math.floor(currentHeadcount * automationIncrease)
+      const newHeadcount = Math.max(0, currentHeadcount - headcountReduction)
+
+      return {
+        ...state,
+        company: {
+          ...state.company,
+          roles: {
+            ...state.company.roles,
+            [role]: {
+              ...state.company.roles[role],
+              automationLevel: newAutomation,
+              headcount: newHeadcount,
+            },
+          },
+        },
+        events: [
+          ...state.events,
+          {
+            tick: state.tick,
+            type: 'success',
+            message: `${agent.type} agent automated ${role} to ${(newAutomation * 100).toFixed(0)}% (reduced headcount by ${headcountReduction})`,
           },
         ],
       }

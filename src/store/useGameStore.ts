@@ -7,6 +7,8 @@ import {
   type SimulationState,
   type Role,
   type GameEvent,
+  type AgentType,
+  type Agent,
 } from '../sim'
 
 /**
@@ -58,6 +60,8 @@ export interface GameState {
   events: string[]
   // Expose roles for automation controls
   roles: SimulationState['company']['roles']
+  // Expose agents for agent panel
+  agents: Agent[]
 }
 
 /**
@@ -68,6 +72,8 @@ interface GameStore extends GameState {
   setAutomation: (role: Role, level: number) => void
   hire: (role: Role, count: number) => void
   fire: (role: Role, count: number) => void
+  deployAgent: (agentType: AgentType) => void
+  automateRole: (role: Role, agentId: string) => void
   reset: () => void
 }
 
@@ -85,6 +91,7 @@ export const useGameStore = create<GameStore>((set) => ({
   company: toCompanyMetrics(simState),
   events: toEventStrings(simState.events),
   roles: simState.company.roles,
+  agents: simState.company.agents,
 
   // Actions
   advanceTick: () => {
@@ -94,6 +101,7 @@ export const useGameStore = create<GameStore>((set) => ({
       company: toCompanyMetrics(simState),
       events: toEventStrings(simState.events),
       roles: simState.company.roles,
+      agents: simState.company.agents,
     })
   },
 
@@ -123,6 +131,25 @@ export const useGameStore = create<GameStore>((set) => ({
     })
   },
 
+  deployAgent: (agentType: AgentType) => {
+    simState = reduce(simState, actions.deployAgent(agentType))
+    set({
+      company: toCompanyMetrics(simState),
+      events: toEventStrings(simState.events),
+      agents: simState.company.agents,
+    })
+  },
+
+  automateRole: (role: Role, agentId: string) => {
+    simState = reduce(simState, actions.automateRole(role, agentId))
+    set({
+      company: toCompanyMetrics(simState),
+      events: toEventStrings(simState.events),
+      roles: simState.company.roles,
+      agents: simState.company.agents,
+    })
+  },
+
   reset: () => {
     simState = createInitialState()
     set({
@@ -130,6 +157,7 @@ export const useGameStore = create<GameStore>((set) => ({
       company: toCompanyMetrics(simState),
       events: toEventStrings(simState.events),
       roles: simState.company.roles,
+      agents: simState.company.agents,
     })
   },
 }))
