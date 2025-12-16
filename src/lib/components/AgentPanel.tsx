@@ -25,9 +25,14 @@ export function AgentPanel() {
             <div key={agentType} className="agent-card">
               <div className="agent-header">
                 <h3>{agentType.charAt(0).toUpperCase() + agentType.slice(1)}</h3>
-                <span className="reliability-badge">
-                  {(config.reliability * 100).toFixed(0)}% reliable
-                </span>
+                <div>
+                  <span className="reliability-badge">
+                    {(config.reliability * 100).toFixed(0)}% reliable
+                  </span>
+                  <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                    ({config.reliability < 0.7 ? 'frequent failures' : 'occasional failures'})
+                  </p>
+                </div>
               </div>
 
               <div className="agent-details">

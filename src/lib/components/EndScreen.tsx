@@ -1,5 +1,6 @@
 import type { Ending } from '../../sim/types'
 import type { CompanyMetrics } from '../../store/useGameStore'
+import { formatCurrency } from '../utils/formatNumber'
 
 interface EndScreenProps {
   ending: Ending
@@ -50,22 +51,6 @@ function getEndingBlurb(ending: Ending): { title: string; message: string } {
   }
 }
 
-/**
- * Format money for display
- */
-function formatMoney(amount: number): string {
-  if (amount >= 1_000_000_000_000) {
-    return `$${(amount / 1_000_000_000_000).toFixed(2)}T`
-  }
-  if (amount >= 1_000_000_000) {
-    return `$${(amount / 1_000_000_000).toFixed(2)}B`
-  }
-  if (amount >= 1_000_000) {
-    return `$${(amount / 1_000_000).toFixed(2)}M`
-  }
-  return `$${amount.toLocaleString()}`
-}
-
 export function EndScreen({ ending, metrics, tick, onRestart, onShare }: EndScreenProps) {
   const { title, message } = getEndingBlurb(ending)
 
@@ -98,11 +83,11 @@ export function EndScreen({ ending, metrics, tick, onRestart, onShare }: EndScre
             </div>
             <div>
               <span className="text-gray-600 text-sm">Final Cash</span>
-              <p className="font-semibold text-lg">{formatMoney(metrics.cash)}</p>
+              <p className="font-semibold text-lg">{formatCurrency(metrics.cash)}</p>
             </div>
             <div>
               <span className="text-gray-600 text-sm">Final Stock Price</span>
-              <p className="font-semibold text-lg">${metrics.stockPrice.toFixed(2)}</p>
+              <p className="font-semibold text-lg">{formatCurrency(metrics.stockPrice)}</p>
             </div>
           </div>
         </div>
