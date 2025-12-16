@@ -9,7 +9,9 @@ import {
   type GameEvent,
   type AgentType,
   type Agent,
+  type Ending,
 } from '../sim'
+import { encodeState, decodeState } from '../share/encode'
 
 /**
  * UI-friendly view of company metrics (flattened from sim state)
@@ -62,6 +64,8 @@ export interface GameState {
   roles: SimulationState['company']['roles']
   // Expose agents for agent panel
   agents: Agent[]
+  // Phase 5: Game ending state
+  ending: Ending | null
 }
 
 /**
@@ -75,6 +79,9 @@ interface GameStore extends GameState {
   deployAgent: (agentType: AgentType) => void
   automateRole: (role: Role, agentId: string) => void
   reset: () => void
+  restart: (seed?: string) => void
+  getShareURL: () => string
+  loadFromHash: () => void
 }
 
 /**
@@ -92,6 +99,7 @@ export const useGameStore = create<GameStore>((set) => ({
   events: toEventStrings(simState.events),
   roles: simState.company.roles,
   agents: simState.company.agents,
+  ending: simState.ending ?? null,
 
   // Actions
   advanceTick: () => {
@@ -102,6 +110,7 @@ export const useGameStore = create<GameStore>((set) => ({
       events: toEventStrings(simState.events),
       roles: simState.company.roles,
       agents: simState.company.agents,
+      ending: simState.ending ?? null,
     })
   },
 
@@ -158,6 +167,46 @@ export const useGameStore = create<GameStore>((set) => ({
       events: toEventStrings(simState.events),
       roles: simState.company.roles,
       agents: simState.company.agents,
+      ending: simState.ending ?? null,
     })
+  },
+
+  restart: (seed?: string) => {
+    simState = createInitialState(seed)
+    set({
+      tick: simState.tick,
+      company: toCompanyMetrics(simState),
+      events: toEventStrings(simState.events),
+      roles: simState.company.roles,
+      agents: simState.company.agents,
+      ending: simState.ending ?? null,
+    })
+  },
+
+  getShareURL: () => {
+    const encoded = encodeState(simState)
+    return `${window.location.origin}${window.location.pathname}#${encoded}`
+  },
+
+  loadFromHash: () => {
+    const hash = window.location.hash.slice(1) // Remove '#' prefix
+    if (!hash) {
+      return // No hash to load
+    }
+
+    const decoded = decodeState(hash)
+    if (decoded) {
+      simState = decoded
+      set({
+        tick: simState.tick,
+        company: toCompanyMetrics(simState),
+        events: toEventStrings(simState.events),
+        roles: simState.company.roles,
+        agents: simState.company.agents,
+        ending: simState.ending ?? null,
+      })
+    } else {
+      console.warn('Failed to decode share link, starting fresh game')
+    }
   },
 }))

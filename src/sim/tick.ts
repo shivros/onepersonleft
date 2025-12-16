@@ -3,9 +3,14 @@
  * This is where the game logic happens
  */
 
-import type { SimulationState, Role, GameEvent } from './types'
+import type { SimulationState, Role, GameEvent, Ending } from './types'
 import { ROLE_CONFIGS, AGENT_CONFIGS } from './types'
 import { SeededRNG } from './rng'
+
+/**
+ * Bankruptcy threshold: number of consecutive weeks at cash <= 0 before game ends
+ */
+const BANKRUPTCY_THRESHOLD = 4
 
 /**
  * Advance the simulation by one week
@@ -56,11 +61,16 @@ export function tick(state: SimulationState): SimulationState {
   const { complianceRisk, auditRisk, agentRisk } = calculateRisks(state, rng)
 
   // Generate random events based on risks
-  const riskEvents = generateRiskEvents(nextTick, rng, {
-    complianceRisk,
-    auditRisk,
-    agentRisk,
-  })
+  const { events: riskEvents, delisted, catastrophicFailure } = generateRiskEvents(
+    nextTick,
+    rng,
+    {
+      complianceRisk,
+      auditRisk,
+      agentRisk,
+    },
+    state
+  )
 
   newEvents.push(...riskEvents)
 
@@ -74,7 +84,12 @@ export function tick(state: SimulationState): SimulationState {
     })
   }
 
-  return {
+  // Track consecutive bankruptcy weeks
+  const previousBankruptTicks = state.bankruptTicks ?? 0
+  const newBankruptTicks = newCash <= 0 ? previousBankruptTicks + 1 : 0
+
+  // Build intermediate state before checking end conditions
+  const intermediateState: SimulationState = {
     ...state,
     tick: nextTick,
     company: {
@@ -91,6 +106,17 @@ export function tick(state: SimulationState): SimulationState {
       agentRisk,
     },
     events: [...state.events, ...newEvents],
+    bankruptTicks: newBankruptTicks,
+    delisted,
+    catastrophicFailure,
+  }
+
+  // Check for game ending conditions
+  const ending = checkEndConditions(intermediateState)
+
+  return {
+    ...intermediateState,
+    ending: ending ?? undefined,
   }
 }
 
@@ -189,13 +215,21 @@ function calculateRisks(
 
 /**
  * Generate random events based on risk levels
+ * Also returns flags for delisting and catastrophic failure
  */
 function generateRiskEvents(
   tick: number,
   rng: SeededRNG,
-  risks: { complianceRisk: number; auditRisk: number; agentRisk: number }
-): GameEvent[] {
+  risks: { complianceRisk: number; auditRisk: number; agentRisk: number },
+  state: SimulationState
+): {
+  events: GameEvent[]
+  delisted: boolean
+  catastrophicFailure: boolean
+} {
   const events: GameEvent[] = []
+  let delisted = state.delisted ?? false
+  let catastrophicFailure = state.catastrophicFailure ?? false
 
   // Compliance incident (low probability, scales with risk)
   if (rng.chance(risks.complianceRisk * 0.02)) {
@@ -206,8 +240,17 @@ function generateRiskEvents(
     })
   }
 
-  // Audit event (low probability, scales with risk)
-  if (rng.chance(risks.auditRisk * 0.02)) {
+  // Catastrophic audit failure - triggers delisting
+  // High compliance risk + high audit risk = audit failure
+  if (risks.complianceRisk > 0.7 && risks.auditRisk > 0.7 && rng.chance(0.05)) {
+    events.push({
+      tick,
+      type: 'danger',
+      message: 'AUDIT FAILED: Critical compliance violations discovered. Company delisted by SEC.',
+    })
+    delisted = true
+  } else if (rng.chance(risks.auditRisk * 0.02)) {
+    // Normal audit event (low probability, scales with risk)
     events.push({
       tick,
       type: 'warning',
@@ -215,8 +258,17 @@ function generateRiskEvents(
     })
   }
 
-  // Agent incident (very low probability, scales with risk)
-  if (rng.chance(risks.agentRisk * 0.01)) {
+  // Catastrophic AI failure - very high agent risk triggers game-ending incident
+  if (risks.agentRisk > 0.8 && rng.chance(0.03)) {
+    events.push({
+      tick,
+      type: 'danger',
+      message:
+        'CATASTROPHIC AI INCIDENT: Multiple AI agents have failed simultaneously. Stakeholder confidence destroyed.',
+    })
+    catastrophicFailure = true
+  } else if (rng.chance(risks.agentRisk * 0.01)) {
+    // Normal agent incident (very low probability, scales with risk)
     events.push({
       tick,
       type: 'danger',
@@ -224,7 +276,7 @@ function generateRiskEvents(
     })
   }
 
-  return events
+  return { events, delisted, catastrophicFailure }
 }
 
 /**
@@ -232,4 +284,59 @@ function generateRiskEvents(
  */
 function getTotalHeadcount(state: SimulationState): number {
   return Object.values(state.company.roles).reduce((sum, role) => sum + role.headcount, 0)
+}
+
+/**
+ * Check if game ending conditions have been met
+ * Returns Ending object if game should end, null otherwise
+ */
+function checkEndConditions(state: SimulationState): Ending | null {
+  // If ending already set, game is over
+  if (state.ending) {
+    return state.ending
+  }
+
+  const totalHeadcount = getTotalHeadcount(state)
+  const { cash } = state.company
+  const bankruptTicks = state.bankruptTicks ?? 0
+  const delisted = state.delisted ?? false
+  const catastrophicFailure = state.catastrophicFailure ?? false
+
+  // LOSE condition: Bankruptcy (4+ consecutive weeks with cash <= 0)
+  if (bankruptTicks >= BANKRUPTCY_THRESHOLD) {
+    return {
+      type: 'lose',
+      reason: 'bankruptcy',
+      tick: state.tick,
+    }
+  }
+
+  // LOSE condition: Delisted
+  if (delisted) {
+    return {
+      type: 'lose',
+      reason: 'delisted',
+      tick: state.tick,
+    }
+  }
+
+  // LOSE condition: Catastrophic failure
+  if (catastrophicFailure) {
+    return {
+      type: 'lose',
+      reason: 'catastrophic',
+      tick: state.tick,
+    }
+  }
+
+  // WIN condition: Headcount === 1, not bankrupt, not delisted
+  if (totalHeadcount === 1 && cash > 0 && !delisted && !catastrophicFailure) {
+    return {
+      type: 'win',
+      reason: 'one_person_left',
+      tick: state.tick,
+    }
+  }
+
+  return null
 }
