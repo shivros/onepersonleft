@@ -1,74 +1,85 @@
-# One Person Left - Phase 3
+# One Person Left - Phase 5
 
 A strategic simulation game exploring AI-driven workforce automation in a big tech company.
 
-## Phase 3 Completion Summary
+## Phase 5 Completion Summary
 
-Phase 3 transforms the simulation into an interactive strategy game where players deploy AI agents and use them to automate company roles. This introduces meaningful tradeoffs between cost savings and operational risks.
+Phase 5 adds game ending conditions and shareable URLs, transforming the game from an endless simulation into a complete experience with victory and defeat scenarios. Players can now reach a WIN ending (1 person left) or various LOSE endings (bankruptcy, delisting, catastrophic AI failure), and share their playthroughs via encoded URL links.
 
 ### What Was Built
 
-1. **AI Agent System**
-   - **4 Agent Types**: Generalist, Support, Engineer, Compliance
-   - **Agent Properties**:
-     - Deployment cost (one-time: $10M-$100M)
-     - Annual operational cost ($5M-$30M/year)
-     - Reliability rating (60%-80%)
-     - Role specialization (which roles they can automate)
-   - **Agent Costs**: Added to company burn rate automatically each tick
-   - **Risk Modeling**: Low-reliability agents increase incident probability
+1. **Game Ending System**
+   - **WIN Condition**: Reach exactly 1 employee with positive cash and no other failures
+   - **LOSE Conditions**:
+     - **Bankruptcy**: 4 consecutive weeks with cash ≤ $0
+     - **Delisted**: SEC delists company after critical compliance audit failures
+     - **Catastrophic AI Failure**: Multiple AI agents fail simultaneously, destroying stakeholder confidence
+   - **Ending State Tracking**: New fields in SimulationState track bankruptcy weeks, delisting status, and catastrophic failures
+   - **Deterministic Triggers**: Risk-based probabilities determine when delisting/catastrophic events occur
 
-2. **Role Automation System**
-   - **Discrete Automation**: Agents automate roles in 10% increments (not continuous sliders)
-   - **Headcount Reduction**: Each automation step reduces headcount proportionally
-   - **Compatibility Checking**: Agents can only automate roles in their specialization
-   - **Multiple Agents**: Same role can be automated by multiple compatible agents
-   - **Automation Cap**: Maximum 100% automation per role
-
-3. **New Game Actions**
-   - **DEPLOY_AGENT**: Purchase and deploy an AI agent (costs cash immediately)
-   - **AUTOMATE_ROLE**: Use a deployed agent to automate a role by +10%
-   - **Debt Mechanic**: Players can go into debt (negative cash) with warning events
-
-4. **UI Components**
-   - **AgentPanel.tsx** (new):
-     - Displays all 4 agent types with costs and specs
-     - Deploy buttons (disabled when insufficient funds)
-     - List of currently deployed agents
-   - **ActionsPanel.tsx** (refactored):
-     - Replaced automation sliders with progress bars (read-only)
-     - Added automation buttons per compatible agent
-     - Shows which agents can automate each role
+2. **End Screen UI**
+   - **EndScreen.tsx** (new):
+     - Modal overlay showing game outcome (Victory! or Game Over)
+     - Contextual blurbs tailored to each ending type
+     - Stats panel: Weeks survived, final headcount, final cash, final stock price
+     - "Restart" button (generates new seed for fresh game)
+     - "Share" button (generates shareable URL)
    - **Dashboard.tsx** (updated):
-     - Restructured to 3-column layout for agent panel
+     - Conditional rendering of EndScreen when ending is set
+     - Share handler with clipboard API integration
+
+3. **State Sharing System**
+   - **URL-Based Encoding**:
+     - Full simulation state encoded to base64url (URL-safe)
+     - State compressed into URL hash (typical size: ~766 characters)
+     - State with 100 events: ~12KB (still manageable for URLs)
+   - **Zod Validation**:
+     - `SimulationStateSchema` ensures decoded states are valid
+     - Graceful error handling for malformed URLs
+     - Backward compatibility with states missing Phase 5 fields
+   - **Auto-loading**:
+     - On app mount, checks for URL hash and loads shared state
+     - Falls back to fresh game if hash is invalid
+
+4. **Store Enhancements**
+   - **useGameStore.ts** (updated):
+     - New `ending` field exposed to UI
+     - `restart(seed?)` method for fresh games
+     - `getShareURL()` method generates shareable links
+     - `loadFromHash()` method decodes and validates URL shares
 
 5. **Enhanced Testing**
-   - **33 total tests** across 4 test suites
-   - New test file: `agents.test.ts` with 16 tests covering:
-     - Agent deployment (cash deduction, unique IDs, debt handling)
-     - Role automation (headcount reduction, compatibility, error cases)
-     - Agent costs in tick calculations
-     - Risk calculations based on agent reliability
-     - Full integration flows
+   - **56 total tests** across 6 test suites (23 new tests)
+   - New test files:
+     - `endings.test.ts` (9 tests): WIN/LOSE conditions, bankruptcy counter, determinism
+     - `encode.test.ts` (14 tests): Round-trip encoding, invalid input handling, URL length, special characters
    - All tests passing with 100% determinism
 
 ### Success Criteria Met
 
-✅ **Core Mechanics**:
-  - 4 agent types with distinct costs, reliability, and specializations
-  - DEPLOY_AGENT action with cash deduction and debt support
-  - AUTOMATE_ROLE action with headcount reduction logic
-  - Agent costs automatically included in burn rate calculations
-  - Risk penalties based on agent reliability
+✅ **Game Ending System**:
+  - WIN condition: headcount === 1 && cash > 0 && !delisted && !catastrophicFailure
+  - LOSE condition (bankruptcy): 4+ consecutive weeks at cash ≤ 0
+  - LOSE condition (delisted): High compliance/audit risk triggers SEC delisting
+  - LOSE condition (catastrophic): Very high agent risk triggers catastrophic AI failure
+  - Ending state persists once set (game stops advancing)
 
-✅ **UI Implementation**:
-  - AgentPanel component with deployment interface
-  - ActionsPanel refactored for button-based automation
-  - Dashboard updated with 3-column layout
-  - Proper agent-role compatibility checking
+✅ **End Screen UI**:
+  - EndScreen component displays with victory/defeat title
+  - Contextual blurbs for each ending type (satirical tone)
+  - Stats panel shows weeks survived, final metrics
+  - Restart button generates new game with new seed
+  - Share button copies URL to clipboard with success alert
+
+✅ **State Sharing System**:
+  - Full state encoded to base64url (URL-safe, no padding)
+  - Zod schema validates decoded states
+  - Malformed/invalid URLs handled gracefully (no crash)
+  - URL hash auto-loads on app mount
+  - Backward compatibility with pre-Phase-5 states
 
 ✅ **Testing & Quality**:
-  - 33 tests passing (16 new Phase 3 tests)
+  - 56 tests passing (23 new Phase 5 tests)
   - No TypeScript errors
   - No linting warnings
   - Production build succeeds
@@ -76,9 +87,9 @@ Phase 3 transforms the simulation into an interactive strategy game where player
 
 ✅ **Architecture**:
   - Pure simulation core preserved
-  - Immutable state updates
-  - Agent state stored in CompanyState
-  - Zustand store properly wired
+  - New `src/share/` module for encoding/validation
+  - Ending logic integrated into tick pipeline
+  - Store methods for restart/share/load
 
 ### Running the Application
 
@@ -130,24 +141,30 @@ types → rng → actions → reduce → tick → index (sim public API)
 ```
 src/
 ├── sim/                      # Pure simulation logic (no React/browser deps)
-│   ├── types.ts              # Core types, agent configs, role configs
+│   ├── types.ts              # Core types (includes Ending type) ✨ UPDATED
 │   ├── rng.ts                # Seeded random number generator
-│   ├── actions.ts            # Player action types (includes DEPLOY_AGENT, AUTOMATE_ROLE)
-│   ├── reduce.ts             # Pure state reducer (agent deployment & automation logic)
-│   ├── tick.ts               # Time advancement (includes agent costs & risk calculations)
+│   ├── actions.ts            # Player action types
+│   ├── reduce.ts             # Pure state reducer
+│   ├── tick.ts               # Time advancement + ending checks ✨ UPDATED
 │   ├── index.ts              # Public API
 │   ├── rng.test.ts           # RNG determinism tests (5 tests)
 │   ├── reduce.test.ts        # Reducer purity tests (6 tests)
 │   ├── tick.test.ts          # Simulation invariant tests (6 tests)
-│   └── agents.test.ts        # Phase 3 agent/automation tests (16 tests) ✨ NEW
+│   ├── agents.test.ts        # Agent/automation tests (16 tests)
+│   └── endings.test.ts       # Ending condition tests (9 tests) ✨ NEW
+├── share/                    # State encoding for shareable URLs ✨ NEW
+│   ├── encode.ts             # Base64url encoding/decoding
+│   ├── schema.ts             # Zod validation schema
+│   └── encode.test.ts        # Encoding tests (14 tests) ✨ NEW
 ├── store/
-│   └── useGameStore.ts       # Zustand store (exposes agents, deployAgent, automateRole)
+│   └── useGameStore.ts       # Zustand store (restart/share/load methods) ✨ UPDATED
 └── lib/components/
-    ├── Dashboard.tsx         # 3-column layout with agent panel ✨ UPDATED
+    ├── Dashboard.tsx         # Conditional EndScreen rendering ✨ UPDATED
     ├── CompanySnapshot.tsx   # Metrics display
-    ├── ActionsPanel.tsx      # Button-based automation controls ✨ UPDATED
-    ├── AgentPanel.tsx        # Agent deployment interface ✨ NEW
-    └── EventLog.tsx          # Event history
+    ├── ActionsPanel.tsx      # Button-based automation controls
+    ├── AgentPanel.tsx        # Agent deployment interface
+    ├── EventLog.tsx          # Event history
+    └── EndScreen.tsx         # Game over modal with share button ✨ NEW
 ```
 
 ### Initial Conditions
@@ -195,34 +212,43 @@ Run `pnpm test` to verify all invariants hold.
 4. Balance risk vs. cost savings
 5. Avoid 100% automation too quickly (increased risk)
 
-### Next Steps (Phase 4+)
+### Gameplay
 
-Phase 3 implements the core gameplay loop. Future phases could add:
+**How to Win:**
+- Fire employees aggressively while maintaining cash flow
+- Deploy AI agents to automate roles and reduce headcount
+- Reach exactly 1 employee without going bankrupt or getting delisted
+- Keep compliance/legal roles staffed to avoid delisting risk
+- Balance agent reliability vs. cost to avoid catastrophic failures
 
-- **Win/Loss Conditions**: Reach "1 person left" or go bankrupt
-- **Agent Upgrades**: Improve reliability, reduce costs
-- **Advanced Events**: PR crises, regulatory audits with financial penalties
-- **UI Enhancements**: Risk meters, charts, agent performance tracking
-- **Persistence**: Save/load game state
-- **Seed Management**: Custom seeds, sharing scenarios
-- **Difficulty Levels**: Easy/normal/hard presets
+**How to Lose:**
+- Go 4+ consecutive weeks with cash ≤ $0 (bankruptcy)
+- Trigger SEC delisting via high compliance/audit risk + bad RNG
+- Cause catastrophic AI failure via very high agent risk (>0.8) + bad RNG
+
+**Strategy Tips:**
+1. Fire aggressively early when cash is high
+2. Deploy generalist agents first (cheap, versatile)
+3. Keep legal/compliance headcount above 0 to reduce delisting risk
+4. Don't rely solely on low-reliability agents (engineer agents at 60%)
+5. Watch for bankruptcy warnings and adjust hiring/firing accordingly
 
 ### Verification
 
-- **Tests**: 33/33 passing (`pnpm test`)
+- **Tests**: 56/56 passing (`pnpm test`)
 - **Lint**: No errors or warnings (`pnpm lint`)
 - **Build**: Clean TypeScript compilation (`pnpm build`)
-- **Determinism**: Same actions produce identical results
-- **Gameplay**: Agent deployment and role automation work as designed
-- **Costs**: Agent operational costs properly reflected in burn rate
-- **Risks**: Agent reliability impacts incident probabilities
+- **Determinism**: Same seed + actions produce identical endings
+- **Endings**: WIN/LOSE conditions trigger correctly
+- **Sharing**: URL encoding/decoding works with backward compatibility
+- **UI**: EndScreen displays properly, share button copies to clipboard
 
 ### Known Limitations
 
-- No persistence (state resets on page refresh)
-- Hardcoded seed (cannot customize)
-- No win/loss conditions (game continues indefinitely)
-- No agent upgrades (deferred to Phase 4)
+- Share URLs can be long (~766 chars for initial state, ~12KB with 100 events)
+- No persistence beyond URL sharing (state resets without sharing URL)
+- Seed is auto-generated on restart (cannot customize)
 - Simple stock price model (not realistic)
 - Events can accumulate unbounded (no limit on event log size)
 - No visual risk indicators (hidden metrics not displayed to player)
+- Ending probabilities depend on RNG (same strategy may yield different outcomes)

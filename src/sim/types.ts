@@ -35,12 +35,22 @@ export interface HiddenMetrics {
   agentRisk: number // 0.0 to 1.0 - risk that AI agents go rogue
 }
 
+export interface Ending {
+  type: 'win' | 'lose'
+  reason: string
+  tick: number
+}
+
 export interface SimulationState {
   tick: number // week number
   seed: string // RNG seed for determinism
   company: CompanyState
   hidden: HiddenMetrics
   events: GameEvent[]
+  ending?: Ending // Game ending state (undefined if game is ongoing)
+  bankruptTicks?: number // Consecutive ticks with cash <= 0
+  delisted?: boolean // Company has been delisted
+  catastrophicFailure?: boolean // Catastrophic AI failure has occurred
 }
 
 export type EventType = 'info' | 'warning' | 'danger' | 'success'
