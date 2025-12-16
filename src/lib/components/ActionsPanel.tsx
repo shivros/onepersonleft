@@ -1,13 +1,14 @@
 import { useGameStore } from '../../store/useGameStore'
-import type { Role } from '../../sim'
+import { AGENT_CONFIGS, type Role } from '../../sim'
 
 const ROLES: Role[] = ['support', 'sales', 'engineering', 'legal', 'compliance']
 
 export function ActionsPanel() {
   const tick = useGameStore((state) => state.tick)
   const roles = useGameStore((state) => state.roles)
+  const agents = useGameStore((state) => state.agents)
   const advanceTick = useGameStore((state) => state.advanceTick)
-  const setAutomation = useGameStore((state) => state.setAutomation)
+  const automateRole = useGameStore((state) => state.automateRole)
   const reset = useGameStore((state) => state.reset)
 
   return (
@@ -32,6 +33,14 @@ export function ActionsPanel() {
               const roleData = roles[role]
               const automationPercent = Math.round(roleData.automationLevel * 100)
 
+              // Find compatible agents for this role
+              const compatibleAgents = agents.filter((agent) => {
+                const config = AGENT_CONFIGS[agent.type]
+                return config.specialization.includes(role)
+              })
+
+              const canAutomate = compatibleAgents.length > 0 && automationPercent < 100
+
               return (
                 <div key={role} className="bg-gray-50 rounded p-3">
                   <div className="flex justify-between items-center mb-2">
@@ -40,19 +49,41 @@ export function ActionsPanel() {
                       {roleData.headcount.toLocaleString()} employees
                     </span>
                   </div>
+
                   <div className="flex items-center gap-3">
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={automationPercent}
-                      onChange={(e) => setAutomation(role, parseInt(e.target.value) / 100)}
-                      className="flex-1"
-                    />
+                    <div className="flex-1">
+                      <div className="h-6 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-blue-500 transition-all duration-300"
+                          style={{ width: `${automationPercent}%` }}
+                        />
+                      </div>
+                    </div>
                     <span className="text-sm font-semibold text-blue-600 w-12">
                       {automationPercent}%
                     </span>
                   </div>
+
+                  {compatibleAgents.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      {compatibleAgents.map((agent) => (
+                        <button
+                          key={agent.id}
+                          onClick={() => automateRole(role, agent.id)}
+                          disabled={!canAutomate}
+                          className="w-full text-xs bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-1 px-2 rounded transition-colors"
+                        >
+                          Automate +10% ({agent.type} agent)
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {compatibleAgents.length === 0 && (
+                    <p className="text-xs text-gray-500 mt-2 italic">
+                      Deploy compatible agent to automate this role
+                    </p>
+                  )}
                 </div>
               )
             })}

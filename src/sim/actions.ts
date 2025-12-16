@@ -3,12 +3,14 @@
  * Actions are the only way to interact with the simulation (besides advancing time)
  */
 
-import type { Role } from './types'
+import type { Role, AgentType } from './types'
 
 export type GameAction =
   | { type: 'SET_AUTOMATION'; role: Role; level: number }
   | { type: 'HIRE'; role: Role; count: number }
   | { type: 'FIRE'; role: Role; count: number }
+  | { type: 'DEPLOY_AGENT'; agentType: AgentType }
+  | { type: 'AUTOMATE_ROLE'; role: Role; agentId: string }
   | { type: 'ADVANCE_TICK' }
 
 /**
@@ -35,5 +37,16 @@ export const actions = {
 
   advanceTick: (): GameAction => ({
     type: 'ADVANCE_TICK',
+  }),
+
+  deployAgent: (agentType: AgentType): GameAction => ({
+    type: 'DEPLOY_AGENT',
+    agentType,
+  }),
+
+  automateRole: (role: Role, agentId: string): GameAction => ({
+    type: 'AUTOMATE_ROLE',
+    role,
+    agentId,
   }),
 }
