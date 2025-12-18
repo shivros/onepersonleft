@@ -122,7 +122,9 @@ export function reduce(state: SimulationState, action: GameAction): SimulationSt
           {
             tick: state.tick,
             type: newCash < 0 ? 'warning' : 'success',
-            message: `Deployed ${agentType} agent for $${(config.deploymentCost / 1_000_000).toFixed(0)}M${newCash < 0 ? ' (debt incurred)' : ''}`,
+            message: `Deployed ${agentType} agent for $${(
+              config.deploymentCost / 1_000_000
+            ).toFixed(0)}M${newCash < 0 ? ' (debt incurred)' : ''}`,
           },
         ],
       }
@@ -193,7 +195,9 @@ export function reduce(state: SimulationState, action: GameAction): SimulationSt
           {
             tick: state.tick,
             type: 'success',
-            message: `${agent.type} agent automated ${role} to ${(newAutomation * 100).toFixed(0)}% (reduced headcount by ${headcountReduction})`,
+            message: `${agent.type} agent automated ${role} to ${(newAutomation * 100).toFixed(
+              0
+            )}% (reduced headcount by ${headcountReduction})`,
           },
         ],
       }

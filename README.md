@@ -9,6 +9,7 @@ Phase 5 adds game ending conditions and shareable URLs, transforming the game fr
 ### What Was Built
 
 1. **Game Ending System**
+
    - **WIN Condition**: Reach exactly 1 employee with positive cash and no other failures
    - **LOSE Conditions**:
      - **Bankruptcy**: 4 consecutive weeks with cash ≤ $0
@@ -18,6 +19,7 @@ Phase 5 adds game ending conditions and shareable URLs, transforming the game fr
    - **Deterministic Triggers**: Risk-based probabilities determine when delisting/catastrophic events occur
 
 2. **End Screen UI**
+
    - **EndScreen.tsx** (new):
      - Modal overlay showing game outcome (Victory! or Game Over)
      - Contextual blurbs tailored to each ending type
@@ -29,6 +31,7 @@ Phase 5 adds game ending conditions and shareable URLs, transforming the game fr
      - Share handler with clipboard API integration
 
 3. **State Sharing System**
+
    - **URL-Based Encoding**:
      - Full simulation state encoded to base64url (URL-safe)
      - State compressed into URL hash (typical size: ~766 characters)
@@ -42,6 +45,7 @@ Phase 5 adds game ending conditions and shareable URLs, transforming the game fr
      - Falls back to fresh game if hash is invalid
 
 4. **Store Enhancements**
+
    - **useGameStore.ts** (updated):
      - New `ending` field exposed to UI
      - `restart(seed?)` method for fresh games
@@ -120,6 +124,57 @@ pnpm lint
 # Build for production
 pnpm build
 ```
+
+### Pre-commit Hooks
+
+This project uses [pre-commit](https://pre-commit.com/) to automatically run code quality checks before each commit. The hooks help maintain code consistency and catch issues early.
+
+**What runs automatically:**
+
+- **Prettier**: Auto-formats code (TypeScript, JSON, YAML, Markdown, CSS)
+- **ESLint**: Lints TypeScript/React code with auto-fix for safe issues
+- **TypeScript**: Type-checks staged files
+- **File checks**: Removes trailing whitespace, fixes end-of-file formatting, checks for merge conflicts
+
+**Setup (first time):**
+
+```bash
+# Install pre-commit (if not already installed)
+pip install pre-commit  # or use your system package manager
+
+# Install the git hooks
+pre-commit install
+```
+
+**Usage:**
+
+The hooks run automatically when you commit. If issues are found:
+
+- **Auto-fixed issues** (formatting): Files are modified automatically, just re-stage and commit again
+- **Blocking issues** (linting errors, type errors): Fix the issues manually, then commit again
+
+**Manual commands:**
+
+```bash
+# Run hooks on all files (useful after updating hook config)
+pre-commit run --all-files
+
+# Run hooks on staged files only
+pre-commit run
+
+# Update hook versions
+pre-commit autoupdate
+
+# Bypass hooks in emergencies (use sparingly!)
+git commit --no-verify
+```
+
+**Troubleshooting:**
+
+- If hooks fail, read the error messages carefully - they show exactly what needs to be fixed
+- Prettier and ESLint auto-fix most issues, so re-staging and committing usually works
+- For type errors, run `pnpm build` to see the full TypeScript output
+- If pre-commit isn't installed, install it system-wide or use a Python virtual environment
 
 ### Architecture
 
