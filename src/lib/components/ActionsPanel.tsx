@@ -10,6 +10,8 @@ export function ActionsPanel() {
   const ending = useGameStore((state) => state.ending)
   const advanceTick = useGameStore((state) => state.advanceTick)
   const automateRole = useGameStore((state) => state.automateRole)
+  const hire = useGameStore((state) => state.hire)
+  const fire = useGameStore((state) => state.fire)
   const reset = useGameStore((state) => state.reset)
 
   const gameEnded = ending !== null
@@ -61,6 +63,7 @@ export function ActionsPanel() {
           <div className="space-y-3">
             {ROLES.map((role) => {
               const roleData = roles[role]
+              const headcount = roleData.headcount
               const automationPercent = Math.round(roleData.automationLevel * 100)
 
               // Find compatible agents for this role
@@ -70,6 +73,59 @@ export function ActionsPanel() {
               })
 
               const canAutomate = compatibleAgents.length > 0 && automationPercent < 100
+              const fireDisabled = gameEnded || headcount === 0
+              const hireDisabled = gameEnded
+
+              const fireTenPercentCount =
+                headcount > 0 ? Math.max(1, Math.floor(headcount * 0.1)) : 0
+
+              const fireActions = [
+                {
+                  label: '-100',
+                  count: Math.min(100, headcount),
+                  tooltip:
+                    headcount === 0
+                      ? 'No employees to fire'
+                      : `Fire ${Math.min(100, headcount).toLocaleString()} ${role}`,
+                },
+                {
+                  label: '-1k',
+                  count: Math.min(1000, headcount),
+                  tooltip:
+                    headcount === 0
+                      ? 'No employees to fire'
+                      : `Fire ${Math.min(1000, headcount).toLocaleString()} ${role}`,
+                },
+                {
+                  label: '-10%',
+                  count: Math.min(headcount, fireTenPercentCount),
+                  tooltip:
+                    headcount === 0
+                      ? 'No employees to fire'
+                      : `Fire ${Math.min(headcount, fireTenPercentCount).toLocaleString()} ${role} (10%)`,
+                },
+                {
+                  label: '-All',
+                  count: headcount,
+                  tooltip:
+                    headcount === 0
+                      ? 'No employees to fire'
+                      : `Fire all ${headcount.toLocaleString()} ${role}`,
+                },
+              ]
+
+              const hireActions = [
+                {
+                  label: '+100',
+                  count: 100,
+                  tooltip: `Hire 100 ${role} (current ${headcount.toLocaleString()})`,
+                },
+                {
+                  label: '+1k',
+                  count: 1000,
+                  tooltip: `Hire 1,000 ${role} (current ${headcount.toLocaleString()})`,
+                },
+              ]
 
               return (
                 <div key={role} className="bg-gray-50 rounded p-3">
@@ -114,6 +170,46 @@ export function ActionsPanel() {
                       Deploy compatible agent to automate this role
                     </p>
                   )}
+
+                  <div className="mt-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] uppercase tracking-wide text-gray-500 w-14">
+                        Fire
+                      </span>
+                      <div className="grid grid-cols-4 gap-2 flex-1">
+                        {fireActions.map(({ label, count, tooltip }) => (
+                          <button
+                            key={label}
+                            onClick={() => fire(role, count)}
+                            disabled={fireDisabled || count === 0}
+                            title={tooltip}
+                            className="text-xs bg-red-100 hover:bg-red-200 disabled:bg-gray-200 disabled:text-gray-500 text-red-700 font-semibold py-1 px-2 rounded-md transition-colors"
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] uppercase tracking-wide text-gray-500 w-14">
+                        Hire
+                      </span>
+                      <div className="grid grid-cols-2 gap-2 flex-1">
+                        {hireActions.map(({ label, count, tooltip }) => (
+                          <button
+                            key={label}
+                            onClick={() => hire(role, count)}
+                            disabled={hireDisabled}
+                            title={tooltip}
+                            className="text-xs bg-green-100 hover:bg-green-200 disabled:bg-gray-200 disabled:text-gray-500 text-green-700 font-semibold py-1 px-2 rounded-md transition-colors"
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )
             })}
