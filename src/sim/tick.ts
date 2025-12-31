@@ -84,7 +84,9 @@ export function tick(state: SimulationState): SimulationState {
     newEvents.push({
       tick: nextTick,
       type: 'info',
-      message: `Week ${nextTick}: Headcount ${headcountChange > 0 ? 'increased' : 'decreased'} by ${Math.abs(headcountChange)}`,
+      message: `Week ${nextTick}: Headcount ${
+        headcountChange > 0 ? 'increased' : 'decreased'
+      } by ${Math.abs(headcountChange)}`,
     })
   }
 
