@@ -102,7 +102,10 @@ export function ActionsPanel() {
                   tooltip:
                     headcount === 0
                       ? 'No employees to fire'
-                      : `Fire ${Math.min(headcount, fireTenPercentCount).toLocaleString()} ${role} (10%)`,
+                      : `Fire ${Math.min(
+                          headcount,
+                          fireTenPercentCount
+                        ).toLocaleString()} ${role} (10%)`,
                 },
                 {
                   label: '-All',
