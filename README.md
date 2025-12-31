@@ -109,6 +109,12 @@ pnpm install
 # Start development server (auto-selects available port)
 pnpm dev
 
+# Check formatting (non-destructive)
+pnpm format:check
+
+# Format files
+pnpm format
+
 # Run tests
 pnpm test
 
@@ -121,9 +127,16 @@ pnpm test:ui
 # Run linter
 pnpm lint
 
+# Type-check without emitting files
+pnpm exec tsc --noEmit
+
 # Build for production
 pnpm build
 ```
+
+### Continuous Integration
+
+The GitHub Actions workflow in `.github/workflows/ci.yml` runs on every push and on pull requests targeting `main` using Node.js 22 with pnpm. It checks formatting (`pnpm format:check`), linting (`pnpm lint`), type safety (`pnpm exec tsc --noEmit`), tests (`pnpm test`), and the production build (`pnpm build`). Use the commands above to reproduce CI locally.
 
 ### Pre-commit Hooks
 
