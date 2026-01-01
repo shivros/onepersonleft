@@ -51,9 +51,10 @@ export function AgentPanel() {
               </div>
 
               <button
+                type="button"
                 onClick={() => handleDeploy(agentType)}
                 disabled={!canAfford}
-                className="deploy-button"
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
               >
                 {canAfford ? 'Deploy Agent' : 'Insufficient Funds'}
               </button>
