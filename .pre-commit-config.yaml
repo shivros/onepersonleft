@@ -32,7 +32,7 @@ repos:
 
   # ESLint - Lint TypeScript/React code
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v8.56.0
+    rev: v9.39.0
     hooks:
       - id: eslint
         name: Lint with ESLint
@@ -40,12 +40,13 @@ repos:
         types: [file]
         args: ['--fix', '--max-warnings=0']
         additional_dependencies:
-          - eslint@8.55.0
-          - '@typescript-eslint/eslint-plugin@6.14.0'
-          - '@typescript-eslint/parser@6.14.0'
-          - eslint-plugin-react-hooks@4.6.0
+          - eslint@9.39.0
+          - typescript-eslint@8.51.0
+          - eslint-plugin-react-hooks@7.0.0
           - eslint-plugin-react-refresh@0.4.5
+          - globals@16.5.0
           - typescript@5.2.2
+          - '@eslint/js'
 
   # TypeScript type-checking
   - repo: local
